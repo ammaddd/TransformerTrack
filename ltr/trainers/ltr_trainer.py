@@ -62,12 +62,12 @@ class LTRTrainer(BaseTrainer):
             data['settings'] = self.settings
 
             if i % 100 == 0:
-                self._experiment.log_image(data['template_images'][0][0].detach().cpu().numpy(),
-                                           name='template_images',
+                self._experiment.log_image(data['train_images'][0][0].detach().cpu().numpy(),
+                                           name='train_images',
                                            image_channels="first",
                                            step=(i+1)*(self.epoch+1))
-                self._experiment.log_image(data['search_images'][0][0].detach().cpu().numpy(),
-                                           name='search_images',
+                self._experiment.log_image(data['test_images'][0][0].detach().cpu().numpy(),
+                                           name='test_images',
                                            image_channels="first",
                                            step=(i+1)*(self.epoch+1))
 
