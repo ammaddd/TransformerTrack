@@ -1,3 +1,5 @@
+from comet_ml import Experiment
+experiment = Experiment(auto_metric_logging=False)
 import torch.optim as optim
 from ltr.dataset import Lasot, Got10k, TrackingNet, MSCOCOSeq
 from ltr.data import processing, sampler, LTRLoader
@@ -8,6 +10,7 @@ import ltr.actors.tracking as tracking_actors
 from ltr.trainers import LTRTrainer
 import ltr.data.transforms as tfm
 from ltr import MultiGPU
+from pandas.io.json._normalize import nested_to_record
 
 
 def run(settings):
@@ -124,8 +127,14 @@ def run(settings):
                             {'params': actor.net.feature_extractor.layer3.parameters(), 'lr': 2e-5}],
                            lr=2e-4)
 
+    settings_dict = nested_to_record(vars(settings), sep='_')
+    experiment.log_others(settings_dict)
+    experiment.log_code("./trainers/ltr_trainer.py")
+    experiment.log_others(loss_weight)
+    experiment.log_others(proposal_params)
+
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.2)
 
-    trainer = LTRTrainer(actor, [loader_train, loader_val], optimizer, settings, lr_scheduler)
+    trainer = LTRTrainer(actor, [loader_train, loader_val], optimizer, settings, lr_scheduler, experiment)
 
     trainer.train(50, load_latest=True, fail_safe=True)
