@@ -60,23 +60,24 @@ class LTRTrainer(BaseTrainer):
 
             data['epoch'] = self.epoch
             data['settings'] = self.settings
+            global_step = (self.epoch*len(loader))+i
 
             if i % 100 == 0:
                 self._experiment.log_image(data['train_images'][0][0].detach().cpu().numpy(),
                                            name='train_images',
                                            image_channels="first",
-                                           step=(i+1)*(self.epoch+1))
+                                           step=global_step)
                 self._experiment.log_image(data['test_images'][0][0].detach().cpu().numpy(),
                                            name='test_images',
                                            image_channels="first",
-                                           step=(i+1)*(self.epoch+1))
+                                           step=global_step)
 
             # forward pass
             loss, stats = self.actor(data)
             for s in stats.keys():
                 self._experiment.log_metric("{}_{}".format(type_,s),
                                             stats[s],
-                                            step=(i+1)*(self.epoch+1),
+                                            step=global_step,
                                             epoch=self.epoch)
 
             # backward pass and update weights
