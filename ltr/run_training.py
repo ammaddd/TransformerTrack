@@ -1,17 +1,17 @@
-from ltr.comet_utils import CometLogger
 import os
 import sys
 import argparse
 import importlib
 import multiprocessing
 import cv2 as cv
-import torch.backends.cudnn
 
 env_path = os.path.join(os.path.dirname(__file__), '..')
 if env_path not in sys.path:
     sys.path.append(env_path)
 
+from ltr.comet_utils import CometLogger
 import ltr.admin.settings as ws_settings
+import torch.backends.cudnn
 
 
 def run_training(train_module, train_name, cudnn_benchmark=True, comet=False):
