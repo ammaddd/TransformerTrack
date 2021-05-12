@@ -1,4 +1,4 @@
-from comet_ml import Experiment
+from ltr.comet_utils import CometLogger
 import os
 import sys
 import argparse
@@ -14,7 +14,7 @@ if env_path not in sys.path:
 import ltr.admin.settings as ws_settings
 
 
-def run_training(train_module, train_name, cudnn_benchmark=True):
+def run_training(train_module, train_name, cudnn_benchmark=True, comet=False):
     """Run a train scripts in train_settings.
     args:
         train_module: Name of module in the "train_settings/" folder.
@@ -33,6 +33,7 @@ def run_training(train_module, train_name, cudnn_benchmark=True):
     settings.module_name = train_module
     settings.script_name = train_name
     settings.project_path = 'ltr/{}/{}'.format(train_module, train_name)
+    settings.comet = comet
 
     expr_module = importlib.import_module('ltr.train_settings.{}.{}'.format(train_module, train_name))
     expr_func = getattr(expr_module, 'run')
@@ -45,10 +46,11 @@ def main():
     parser.add_argument('train_module', type=str, help='Name of module in the "train_settings/" folder.')
     parser.add_argument('train_name', type=str, help='Name of the train settings file.')
     parser.add_argument('--cudnn_benchmark', type=bool, default=True, help='Set cudnn benchmark on (1) or off (0) (default is on).')
+    parser.add_argument('--comet', type=bool, default=False, help='enable comet logging (if comet installed)')
 
     args = parser.parse_args()
 
-    run_training(args.train_module, args.train_name, args.cudnn_benchmark)
+    run_training(args.train_module, args.train_name, args.cudnn_benchmark, args.comet)
 
 
 if __name__ == '__main__':
