@@ -8,7 +8,7 @@ import time
 
 
 class LTRTrainer(BaseTrainer):
-    def __init__(self, actor, loaders, optimizer, settings, lr_scheduler=None):
+    def __init__(self, actor, loaders, optimizer, settings, lr_scheduler=None, comet_logger=None):
         """
         args:
             actor - The actor for training the network
@@ -24,6 +24,9 @@ class LTRTrainer(BaseTrainer):
 
         # Initialize statistics variables
         self.stats = OrderedDict({loader.name: None for loader in self.loaders})
+
+        # Initialize Comet
+        self._comet_logger = comet_logger
 
         # Initialize tensorboard
         tensorboard_writer_dir = os.path.join(self.settings.env.tensorboard_dir, self.settings.project_path)
@@ -48,6 +51,7 @@ class LTRTrainer(BaseTrainer):
         torch.set_grad_enabled(loader.training)
 
         self._init_timing()
+        type_ = 'Train' if loader.training else 'Val'
 
         for i, data in enumerate(loader, 1):
             # get inputs
@@ -56,9 +60,25 @@ class LTRTrainer(BaseTrainer):
 
             data['epoch'] = self.epoch
             data['settings'] = self.settings
+            global_step = (self.epoch*len(loader))+i
+
+            if i % 100 == 0:
+                self._comet_logger.log_image(data['train_images'][0][0].detach().cpu().numpy(),
+                                             name='train_images',
+                                             image_channels="first",
+                                             step=global_step)
+                self._comet_logger.log_image(data['test_images'][0][0].detach().cpu().numpy(),
+                                             name='test_images',
+                                             image_channels="first",
+                                             step=global_step)
 
             # forward pass
             loss, stats = self.actor(data)
+            for s in stats.keys():
+                self._comet_logger.log_metric("{}_{}".format(type_,s),
+                                              stats[s],
+                                              step=global_step,
+                                              epoch=self.epoch)
 
             # backward pass and update weights
             if loader.training:
